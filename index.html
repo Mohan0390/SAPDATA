@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fa;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+
+    .filters input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 200px;
+    }
+
+    .filters button {
+      padding: 10px 16px;
+      border: none;
+      background: #4CAF50;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .filters button:hover {
+      background: #388e3c;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #4CAF50;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Customer Data Viewer</h2>
+
+    <div class="filters">
+      <input type="text" id="filterCustomer" placeholder="Customer ID">
+      <input type="text" id="filterCity" placeholder="City Name">
+      <input type="text" id="filterCompany" placeholder="Company Code">
+      <button onclick="applyFilters()">🔍 Filter</button>
+      <button onclick="resetFilters()">🔄 Reset</button>
+    </div>
+
+    <div id="dataContainer"></div>
+  </div>
+
+  <script>
+    let allData = [];
+
+    async function fetchData() {
+      try {
+        const response = await fetch('http://localhost:3001/api/customers');
+        if (!response.ok) throw new Error("Failed to fetch data");
+        const data = await response.json();
+        allData = data;
+        displayData(data);
+      } catch (err) {
+        document.getElementById("dataContainer").innerHTML =
+          `<div class="no-data">Error: ${err.message}</div>`;
+      }
+    }
+
+    function displayData(data) {
+      if (data.length === 0) {
+        document.getElementById("dataContainer").innerHTML =
+          `<div class="no-data">No customer records found.</div>`;
+        return;
+      }
+
+      const table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Customer Name</th>
+              <th>City</th>
+              <th>Region</th>
+              <th>Country</th>
+              <th>Language</th>
+              <th>Postal Code</th>
+              <th>Company Code</th>
+              <th>Reconciliation Account</th>
+              <th>Payment Terms</th>
+              <th>Customer Location</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(d => `
+              <tr>
+                <td>${d.Customer}</td>
+                <td>${d.CustomerName}</td>
+                <td>${d.CityName}</td>
+                <td>${d.Region}</td>
+                <td>${d.Country}</td>
+                <td>${d.Language}</td>
+                <td>${d.PostalCode}</td>
+                <td>${d.CompanyCode}</td>
+                <td>${d.ReconciliationAccount}</td>
+                <td>${d.PaymentTerms}</td>
+                <td>${d.CustomerLocation}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      document.getElementById("dataContainer").innerHTML = table;
+    }
+
+    function applyFilters() {
+      const customer = document.getElementById("filterCustomer").value.trim().toLowerCase();
+      const city = document.getElementById("filterCity").value.trim().toLowerCase();
+      const company = document.getElementById("filterCompany").value.trim().toLowerCase();
+
+      const filtered = allData.filter(d =>
+        (!customer || d.Customer.toLowerCase().includes(customer)) &&
+        (!city || d.CityName.toLowerCase().includes(city)) &&
+        (!company || d.CompanyCode.toLowerCase().includes(company))
+      );
+
+      displayData(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById("filterCustomer").value = "";
+      document.getElementById("filterCity").value = "";
+      document.getElementById("filterCompany").value = "";
+      displayData(allData);
+    }
+
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
